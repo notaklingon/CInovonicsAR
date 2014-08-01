@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+	<Product Id="*" Name="CInovoincs Relay Service" Language="1033" Version="1.0.0.0" Manufacturer="Scott Sloan" UpgradeCode="8aa331e9-778b-4ae9-9bdb-96a60fd6a5de">
+		<Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" Comments="Windows Installer Package"/>
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+    <MediaTemplate EmbedCab="yes" />
+
+		<Feature Id="ProductFeature" Title="SetupCInovonicsService" Level="1">
+			<ComponentGroupRef Id="ProductComponents" />
+		</Feature>
+	</Product>
+
+	<Fragment>
+		<Directory Id="TARGETDIR" Name="SourceDir">
+			<Directory Id="ProgramFilesFolder">
+        <Directory Id="CInovonicsDir" Name="CInovonics">
+          <Directory Id="INSTALLFOLDER" Name="$(var.CInovonicsService.ProjectName)" />
+        </Directory>
+			</Directory>
+		</Directory>
+	</Fragment>
+
+	<Fragment>
+		<ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+      <Component Id="DLLs" Guid="{69B0BFCD-BFF4-40AE-BA7C-024036D7881D}">
+        <File Source="$(var.CInovonicsService.TargetDir)"  Id='CInovonics.Domain' Name='CInovonics.Domain.dll' KeyPath='yes'/>
+      </Component>
+      <Component Id="ConfigurationFiles" Guid="{DCF52663-08D4-4739-9197-9DA23BA20AFD}">
+        <File Source="..\CInovonicsService\bin\Release\CInovonicsService.exe.config"  Id='CInovonicsServiceConfig' Name='CInovonicsService.exe.config' KeyPath='yes'/>
+      </Component>
+      <Component Id="Executable" Guid="{63EC0C1C-AD6F-444B-873C-0CC63D02472B}">
+        <File Source="$(var.CInovonicsService.TargetDir)"  Id='CInovonicsService' Name='CInovonicsService.exe' KeyPath='yes'/>
+        <ServiceInstall Id="ServiceInstaller"
+                Type="ownProcess"
+                Vital="yes"
+                Name="JobService"
+                DisplayName="CInovonics Relay Service"
+                Description="Relays messages from Inovonics to CCURE 9000"
+                Start="auto"
+                Account="LocalSystem"
+                ErrorControl="ignore"
+                Interactive="no" />
+        <ServiceControl Id="StartService"  Start="install" Stop="both" Remove="uninstall" Name="JobService" Wait="no" />
+      </Component>
+    </ComponentGroup>
+	</Fragment>
+</Wix>

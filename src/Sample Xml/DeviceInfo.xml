@@ -1,0 +1,13 @@
+<DeviceInfo>
+	<deviceName>Test</deviceName>
+	<deviceID>207DF398-5015-9281-510E-F815056EC8E5</deviceID>
+	<deviceDescription/>
+	<deviceLocation>LaCrosse County Facil.</deviceLocation>
+	<systemContact>Jerry,Severson,608-785-9770,608-386-0694</systemContact>
+	<model/>
+	<serialNumber>91146469</serialNumber>
+	<macAddress>E00B286EC8E5</macAddress>
+	<firmwareVersion>1.0.2.2</firmwareVersion>
+	<bootVersion>0.61.1.0</bootVersion>
+	<manufactureDate>2013-02-02</manufactureDate>
+</DeviceInfo>

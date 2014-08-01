@@ -1,0 +1,23 @@
+<AreaControlEvent>
+	<MetadataHeader>
+		<MetaVersion>1.0</MetaVersion>
+		<MetaID>psiaalliance.org/AreaControl.System/systemState</MetaID>
+		<MetaSourceID>{207DF398-5015-9281-510E-F815056EC8E5}</MetaSourceID>
+		<MetaSourceLocalID>7260389</MetaSourceLocalID>
+		<MetaTime>2014-05-08T20:01:52.212Z</MetaTime>
+		<MetaPriority>6</MetaPriority>
+	</MetadataHeader>
+	<EventData>
+		<Info>
+			<ID>1</ID>
+			<Type>EN6080 Receiver</Type>
+			<Description>base receiver</Description>
+			<PartitionList></PartitionList>
+			<SCI>hello</SCI>
+			<SCICode>125</SCICode>
+		</Info>
+		<ValueState>
+			<System>OK</System>
+		</ValueState>
+	</EventData>
+</AreaControlEvent>
