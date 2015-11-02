@@ -1,0 +1,147 @@
+using System;
+using System.Collections.Concurrent;
+using System.ComponentModel;
+using System.Net;
+using System.Net.Sockets;
+
+namespace CInovonics.Domain.CCure
+{
+    //General Purpose Interface for CCure
+    public class GPIDevice : IDisposable
+    {
+        public delegate void EventRaised(String msg);
+        public event EventRaised OnCCureEventRaised;
+
+        public const int MAX_BUFFER_SIZE = 1024;
+        public byte Acknowledgement = Convert.ToByte('\x0006');
+        public string MSG_HEADER = "<";
+        public string MSG_FOOTER = ">";
+
+        private BlockingCollection<string> _msgQueue;
+
+        private int _port;
+        private IPAddress _ipAddr;
+        private TcpListener _tcpListen;
+
+        private BackgroundWorker _bwListener;
+
+        private TcpClient client;
+        private NetworkStream stream;
+
+        public GPIDevice(IPAddress addr, int Port)
+        {
+            _port = Port;
+            _ipAddr = addr;
+
+            
+            _tcpListen = new TcpListener(_ipAddr, _port);
+            _tcpListen.Start();
+
+            _msgQueue = new BlockingCollection<string>();
+
+            _bwListener = new BackgroundWorker();
+            _bwListener.WorkerSupportsCancellation = true;
+            _bwListener.DoWork += new DoWorkEventHandler(Listen);
+            _bwListener.RunWorkerAsync();
+        }
+
+        public void QueueMessage(string msg)
+        {
+            _msgQueue.TryAdd(msg);
+        }
+
+        public void Listen(object sender, DoWorkEventArgs e)
+        {
+            try
+            {
+                Byte[] buffer = new Byte[MAX_BUFFER_SIZE];
+
+                while (true)
+                {
+                    //System.Diagnostics.Debug.WriteLine("CCure-Listening");
+                    client = _tcpListen.AcceptTcpClient();
+                    stream = client.GetStream();
+
+                    try
+                    {
+                        int i = 0;
+                        // Loop to receive all the data sent by the client. 
+                        while ((i = stream.Read(buffer, 0, buffer.Length)) != 0)
+                        {
+                            //Send our Acknowledgement
+                            byte[] reply = new byte[1];
+                            reply[0] = Acknowledgement;
+                            stream.Write(reply, 0, reply.Length);
+
+                            //Hand it off to whomever is listening
+                            if (OnCCureEventRaised != null)
+                            {
+                                OnCCureEventRaised(System.Text.Encoding.ASCII.GetString(buffer, 0, i));
+                            }
+
+                            foreach (string m in _msgQueue.GetConsumingEnumerable())
+                            {
+                                string encMsg = String.Format("{0}{1}{2}", MSG_HEADER, m, MSG_FOOTER);
+                                byte[] qMsg = System.Text.Encoding.ASCII.GetBytes(encMsg);
+                                stream.Write(qMsg, 0, qMsg.Length);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        
+                    }
+
+                    stream.Dispose();
+                    stream.Close();
+                    client.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+
+            }
+            finally
+            {
+                if (_tcpListen != null)
+                {
+                    _tcpListen.Stop();
+                }
+            }
+        }
+        public void SendENQ()
+        {
+            byte[] reply = new byte[1];
+            reply[0] = Acknowledgement;
+            stream.Write(reply, 0, reply.Length);
+        }
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                if (_bwListener != null)
+                {
+                    if (_bwListener.CancellationPending == false)
+                    {
+                        _bwListener.CancelAsync();
+                    }
+                    _bwListener.Dispose();
+                }
+                if (_msgQueue != null)
+                {
+                    _msgQueue.Dispose();                    
+                }
+                if (_tcpListen != null)
+                {
+                    _tcpListen.Stop();
+                    _tcpListen = null;                
+                }
+            }
+        }
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.Collect();
+        }
+    }
+}
